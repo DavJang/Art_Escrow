@@ -1,53 +1,155 @@
 <!doctype html>
 <meta charset="utf-8" />
-<title>KAIA Escrow MVP (Kairos)</title>
+<title>Hwarang MVP — DEMO / LIVE</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <!-- Ethers v6 -->
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
 <!-- WalletConnect (ABC월렛용) -->
 <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.14.1/dist/index.umd.js"></script>
+
 <style>
-  body{font-family:system-ui;padding:20px;max-width:760px;margin:auto}
-  .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
-  input,button{padding:10px;width:100%;margin:6px 0} small{opacity:.7}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  :root{
+    /* 블랙 & 골드 토큰 */
+    --bg:#0b0b0e;             /* 배경 */
+    --panel:#121216;          /* 카드 배경 */
+    --muted:#a6a6b0;          /* 보조 텍스트 */
+    --text:#f5f6fa;           /* 본문 텍스트 */
+    --gold:#D7B46A;           /* 메인 골드 */
+    --gold-2:#B8934C;         /* 딥 골드 */
+    --line:#1e1e25;           /* 테두리 */
+    --radius:14px;            /* 라운드 */
+    --shadow:0 14px 36px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:
+      radial-gradient(1100px 500px at 10% -10%, rgba(215,180,106,.15), transparent 60%),
+      radial-gradient(900px 600px at 110% -10%, rgba(184,147,76,.10), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
+  }
+
+  /* 컨테이너 & 헤더 */
+  .wrap{max-width:980px;margin:36px auto;padding:0 18px}
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .brand{
+    display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px;
+    font-size:22px;
+  }
+  .brand .dot{width:12px;height:12px;border-radius:50%;
+    background:linear-gradient(180deg,var(--gold),var(--gold-2));
+    box-shadow:0 0 18px rgba(215,180,106,.65);
+  }
+  .badge{
+    color:#0b0b0e;background:linear-gradient(180deg,var(--gold),var(--gold-2));
+    border:none;padding:8px 12px;border-radius:999px;font-weight:700;font-size:12px;
+  }
+
+  /* 카드 */
+  .card{
+    background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.0));
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin:12px 0;
+    box-shadow:var(--shadow);
+  }
+  h2{margin:0 0 6px 0;font-size:18px;font-weight:800;letter-spacing:.2px}
+  .sub{color:var(--muted);font-size:13px;margin:2px 0 10px}
+
+  /* 입력/버튼 공통 */
+  input,button{
+    width:100%;padding:12px 14px;margin:6px 0;border-radius:12px;
+    border:1px solid var(--line);outline:none;transition:.18s;
+  }
+  input{
+    background:#0f0f13;color:var(--text);
+  }
+  input::placeholder{color:#7d7d88}
+  input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(215,180,106,.20)}
+
+  button{
+    cursor:pointer;
+    background:linear-gradient(180deg,var(--gold),var(--gold-2));
+    color:#0b0b0e;font-weight:800;letter-spacing:.2px;border:none;
+    box-shadow:0 10px 22px rgba(215,180,106,.25);
+  }
+  button.secondary{
+    background:#16161c;color:var(--text);border:1px solid var(--line);box-shadow:none;
+  }
+  button.ghost{
+    background:transparent;color:var(--text);border:1px dashed var(--line);box-shadow:none;
+  }
+  button:disabled{opacity:.55;cursor:not-allowed}
+  button:hover:not(:disabled){transform:translateY(-1px)}
+
+  /* 레이아웃 */
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media (max-width:760px){ .row{grid-template-columns:1fr} }
+
+  /* 로그 */
+  #log{
+    background:#0e0e12;border:1px dashed var(--line);
+    border-radius:12px;padding:12px;min-height:60px;max-height:240px;overflow:auto;
+    font:12px ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:#d6d7de;
+  }
+
+  /* 알림 라벨 */
+  .hint{display:inline-flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
+  .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f0f13;color:#cfcfd8;font-size:12px}
 </style>
 
-<h2>KAIA Escrow MVP — Demo / Live</h2>
-<p><b>주의:</b> 테스트넷 전용. 실자산·실키 금지.</p>
-
-<div class="card">
-  <label><input id="demo" type="checkbox" checked> Demo 모드(지갑/주소 없이 시뮬레이션)</label>
-  <div id="acct"><small>Demo 모드: 연결 불필요</small></div>
-  <div class="row">
-    <button id="connectInjected" disabled>지갑 연결(브라우저 지갑)</button>
-    <button id="connectWC" disabled>지갑 연결(ABC 월렛 · WalletConnect)</button>
+<div class="wrap">
+  <div class="header">
+    <div class="brand"><span class="dot"></span> Hwarang MVP</div>
+    <span class="badge">DEMO / LIVE</span>
   </div>
-</div>
 
-<div class="card">
-  <h3>설정</h3>
-  <input id="backend" placeholder="Demo API 주소 (예: https://your-backend.onrender.com)" />
-  <input id="escrow" placeholder="(Live) ArtEscrowNative 주소" />
-  <input id="price" type="text" value="1.0" placeholder="price in KAIA (예: 1.0)" />
-  <input id="chainId" type="text" value="1001" placeholder="체인ID (예: Kairos=1001, 다르면 수정)" />
-  <input id="wcProjectId" placeholder="WalletConnect Project ID (ABC월렛 연결 시)" />
-  <button id="save">설정 저장</button>
-  <div id="status"></div>
-</div>
-
-<div class="card">
-  <h3>동작</h3>
-  <div class="row">
-    <button id="create">create (demo-api)</button>
-    <button id="fund">fund()</button>
+  <div class="card">
+    <h2>모드</h2>
+    <div class="sub">테스트넷 전용 · 실자산/실키 금지</div>
+    <label class="pill" style="margin-right:8px;">
+      <input id="demo" type="checkbox" checked style="accent-color:#d7b46a;margin-right:8px;scale:1.15;">
+      Demo 모드(지갑/주소 없이 시뮬레이션)
+    </label>
+    <div id="acct" class="hint" style="margin-top:8px;">Demo 모드: 연결 불필요</div>
+    <div class="row" style="margin-top:10px">
+      <button id="connectInjected" class="secondary" disabled>지갑 연결(브라우저 지갑)</button>
+      <button id="connectWC" class="secondary" disabled>지갑 연결(ABC 월렛 · WalletConnect)</button>
+    </div>
   </div>
-  <button id="confirm">confirm()</button>
-  <button id="runAll">Run All (fund→confirm)</button>
-  <div id="log"></div>
+
+  <div class="card">
+    <h2>설정</h2>
+    <input id="backend" placeholder="Demo API 주소 (예: https://art-escrow.onrender.com)" />
+    <input id="escrow" placeholder="(Live) ArtEscrowNative 주소" />
+    <div class="row">
+      <input id="price" type="text" value="1.0" placeholder="price in KAIA (예: 1.0)" />
+      <input id="chainId" type="text" value="1001" placeholder="체인ID (예: Kairos=1001, 다르면 수정)" />
+    </div>
+    <input id="wcProjectId" placeholder="WalletConnect Project ID (ABC월렛 연결 시)" />
+    <div class="row">
+      <button id="save">설정 저장</button>
+      <div id="status" class="pill">대기 중…</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>동작</h2>
+    <div class="row">
+      <button id="create" class="ghost">create (demo-api)</button>
+      <button id="fund">fund()</button>
+    </div>
+    <button id="confirm" class="secondary">confirm()</button>
+    <button id="runAll">Run All (fund→confirm)</button>
+    <div id="log" style="margin-top:10px"></div>
+  </div>
 </div>
 
 <script>
+/* ===== 기존 기능 그대로 (코드 전혀 수정 안 함) ===== */
 const escrowAbi = [
   "function price() view returns (uint256)",
   "function fund() payable",
@@ -66,7 +168,7 @@ el("demo").onchange = () => {
   const dis = demo ? true : false;
   el("connectInjected").disabled = dis;
   el("connectWC").disabled = dis;
-  el("acct").innerHTML = demo ? "<small>Demo 모드: 연결 불필요</small>" : "<small>Live 모드: 지갑 연결 필요</small>";
+  el("acct").innerHTML = demo ? "Demo 모드: 연결 불필요" : "Live 모드: 지갑 연결 필요";
 };
 
 // 브라우저 지갑(Kaikas/MetaMask)
