@@ -312,7 +312,7 @@ el("listArt").onclick = async () => {
     method:"POST", headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ title, image, price, seller:"sellersellersellerseller" })
   });
-  if (!r.ok) return alert("등록 실패");
+  if (!r.ok) { const t = await r.text(); return alert(`등록 실패: ${r.status} ${t}`); }
   const art = await r.json();
   // 가상 예치: 판매자 → 에스크로 10%
   const ten = +(price*0.10).toFixed(6);
