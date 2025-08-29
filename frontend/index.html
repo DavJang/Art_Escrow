@@ -1,0 +1,158 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>KAIA Escrow MVP (Kairos)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<!-- Ethers v6 -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<!-- WalletConnect (ABC월렛용) -->
+<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.14.1/dist/index.umd.js"></script>
+<style>
+  body{font-family:system-ui;padding:20px;max-width:760px;margin:auto}
+  .card{border:1px solid #ddd;border-radius:12px;padding:16px;margin:12px 0}
+  input,button{padding:10px;width:100%;margin:6px 0} small{opacity:.7}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+</style>
+
+<h2>KAIA Escrow MVP — Demo / Live</h2>
+<p><b>주의:</b> 테스트넷 전용. 실자산·실키 금지.</p>
+
+<div class="card">
+  <label><input id="demo" type="checkbox" checked> Demo 모드(지갑/주소 없이 시뮬레이션)</label>
+  <div id="acct"><small>Demo 모드: 연결 불필요</small></div>
+  <div class="row">
+    <button id="connectInjected" disabled>지갑 연결(브라우저 지갑)</button>
+    <button id="connectWC" disabled>지갑 연결(ABC 월렛 · WalletConnect)</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3>설정</h3>
+  <input id="backend" placeholder="Demo API 주소 (예: https://your-backend.onrender.com)" />
+  <input id="escrow" placeholder="(Live) ArtEscrowNative 주소" />
+  <input id="price" type="text" value="1.0" placeholder="price in KAIA (예: 1.0)" />
+  <input id="chainId" type="text" value="1001" placeholder="체인ID (예: Kairos=1001, 다르면 수정)" />
+  <input id="wcProjectId" placeholder="WalletConnect Project ID (ABC월렛 연결 시)" />
+  <button id="save">설정 저장</button>
+  <div id="status"></div>
+</div>
+
+<div class="card">
+  <h3>동작</h3>
+  <div class="row">
+    <button id="create">create (demo-api)</button>
+    <button id="fund">fund()</button>
+  </div>
+  <button id="confirm">confirm()</button>
+  <button id="runAll">Run All (fund→confirm)</button>
+  <div id="log"></div>
+</div>
+
+<script>
+const escrowAbi = [
+  "function price() view returns (uint256)",
+  "function fund() payable",
+  "function confirm()",
+];
+
+let demo = true, provider, signer, escrow, wcProvider, escrowId = null, currentChain = 1001n;
+
+const el = id => document.getElementById(id);
+const log = m => el("log").innerHTML = `<small>${new Date().toLocaleTimeString()} — ${m}</small><br>` + el("log").innerHTML;
+const setStatus = m => el("status").innerText = m;
+
+// Demo/Live 토글
+el("demo").onchange = () => {
+  demo = el("demo").checked;
+  const dis = demo ? true : false;
+  el("connectInjected").disabled = dis;
+  el("connectWC").disabled = dis;
+  el("acct").innerHTML = demo ? "<small>Demo 모드: 연결 불필요</small>" : "<small>Live 모드: 지갑 연결 필요</small>";
+};
+
+// 브라우저 지갑(Kaikas/MetaMask)
+el("connectInjected").onclick = async () => {
+  if (!window.ethereum) return alert("브라우저 지갑이 필요합니다 (Kaikas/MetaMask)");
+  provider = new ethers.BrowserProvider(window.ethereum);
+  await provider.send("eth_requestAccounts",[]);
+  signer = await provider.getSigner();
+  const net = await provider.getNetwork();
+  currentChain = net.chainId;
+  el("acct").innerHTML = `<b>${await signer.getAddress()}</b> (chainId=${net.chainId})`;
+};
+
+// ABC월렛(모바일) — WalletConnect
+el("connectWC").onclick = async () => {
+  const pid = el("wcProjectId").value.trim();
+  const cid = Number(el("chainId").value || "1001");
+  if (!pid) return alert("WalletConnect Project ID를 입력하세요.");
+  wcProvider = await window.WalletConnectProvider.EthereumProvider.init({
+    projectId: pid, chains: [cid], optionalChains: [cid], showQrModal: true
+  });
+  await wcProvider.connect();
+  provider = new ethers.BrowserProvider(wcProvider);
+  signer = await provider.getSigner();
+  const net = await provider.getNetwork();
+  currentChain = net.chainId;
+  el("acct").innerHTML = `<b>${await signer.getAddress()}</b> (chainId=${net.chainId})`;
+};
+
+// 설정 저장
+el("save").onclick = async () => {
+  const addr = el("escrow").value.trim();
+  const priceStr = el("price").value || "1.0";
+  const cid = el("chainId").value || "1001";
+  currentChain = BigInt(cid);
+  if (demo) { setStatus("Demo 설정 완료"); return; }
+  if (!provider || !signer) return alert("먼저 지갑 연결");
+  if (!addr) return alert("Escrow 주소 입력");
+  escrow = new ethers.Contract(addr, escrowAbi, signer);
+  try {
+    const onP = await escrow.price();
+    setStatus(`Live 설정 완료. on-chain price=${ethers.formatEther(onP)} KAIA / 입력=${priceStr}`);
+  } catch { setStatus("컨트랙트/네트워크 확인 필요"); }
+};
+
+// Demo API: 생성
+el("create").onclick = async () => {
+  if (!demo) { log("(참고) Live 모드에서는 create 불필요"); return; }
+  const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
+  const priceStr = el("price").value || "1.0";
+  const r = await fetch(be + "/api/escrow", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ price: priceStr }) });
+  const j = await r.json(); escrowId = j.id; log(`(demo) created: id=${escrowId}, status=${j.status}`);
+};
+
+// fund
+el("fund").onclick = async () => {
+  const priceStr = el("price").value || "1.0";
+  if (demo) {
+    if (!escrowId) return alert("먼저 create");
+    const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
+    await fetch(be + `/api/escrow/${escrowId}/fund`, { method:"POST" });
+    log(`(demo) fund -> status=INSPECTION`);
+    return;
+  }
+  if (!escrow) return alert("설정 저장 후 실행");
+  const val = ethers.parseEther(priceStr.toString());
+  const tx = await escrow.fund({ value: val });
+  log(`fund tx: ${tx.hash}`); await tx.wait(); log("fund mined");
+};
+
+// confirm
+el("confirm").onclick = async () => {
+  if (demo) {
+    if (!escrowId) return alert("먼저 create");
+    const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
+    await fetch(be + `/api/escrow/${escrowId}/confirm`, { method:"POST" });
+    log(`(demo) confirm -> status=CONFIRMED`);
+    return;
+  }
+  if (!escrow) return alert("설정 저장 후 실행");
+  const tx = await escrow.confirm();
+  log(`confirm tx: ${tx.hash}`); await tx.wait(); log("confirm mined");
+};
+
+// 원클릭 시퀀스
+el("runAll").onclick = async () => {
+  await el("fund").onclick(); await el("confirm").onclick();
+};
+</script>
