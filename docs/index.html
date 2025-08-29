@@ -8,161 +8,199 @@
 <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.14.1/dist/index.umd.js"></script>
 
 <style>
-  :root{
-    /* 블랙 & 골드 토큰 */
-    --bg:#0b0b0e;             /* 배경 */
-    --panel:#121216;          /* 카드 배경 */
-    --muted:#a6a6b0;          /* 보조 텍스트 */
-    --text:#f5f6fa;           /* 본문 텍스트 */
-    --gold:#D7B46A;           /* 메인 골드 */
-    --gold-2:#B8934C;         /* 딥 골드 */
-    --line:#1e1e25;           /* 테두리 */
-    --radius:14px;            /* 라운드 */
-    --shadow:0 14px 36px rgba(0,0,0,.45);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; background:
-      radial-gradient(1100px 500px at 10% -10%, rgba(215,180,106,.15), transparent 60%),
-      radial-gradient(900px 600px at 110% -10%, rgba(184,147,76,.10), transparent 60%),
-      var(--bg);
-    color:var(--text);
-    font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
-  }
-
-  /* 컨테이너 & 헤더 */
-  .wrap{max-width:980px;margin:36px auto;padding:0 18px}
-  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-  .brand{
-    display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.3px;
-    font-size:22px;
-  }
-  .brand .dot{width:12px;height:12px;border-radius:50%;
-    background:linear-gradient(180deg,var(--gold),var(--gold-2));
-    box-shadow:0 0 18px rgba(215,180,106,.65);
-  }
-  .badge{
-    color:#0b0b0e;background:linear-gradient(180deg,var(--gold),var(--gold-2));
-    border:none;padding:8px 12px;border-radius:999px;font-weight:700;font-size:12px;
-  }
-
-  /* 카드 */
-  .card{
-    background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.0));
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:18px;
-    margin:12px 0;
-    box-shadow:var(--shadow);
-  }
-  h2{margin:0 0 6px 0;font-size:18px;font-weight:800;letter-spacing:.2px}
-  .sub{color:var(--muted);font-size:13px;margin:2px 0 10px}
-
-  /* 입력/버튼 공통 */
-  input,button{
-    width:100%;padding:12px 14px;margin:6px 0;border-radius:12px;
-    border:1px solid var(--line);outline:none;transition:.18s;
-  }
-  input{
-    background:#0f0f13;color:var(--text);
-  }
-  input::placeholder{color:#7d7d88}
-  input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(215,180,106,.20)}
-
-  button{
-    cursor:pointer;
-    background:linear-gradient(180deg,var(--gold),var(--gold-2));
-    color:#0b0b0e;font-weight:800;letter-spacing:.2px;border:none;
-    box-shadow:0 10px 22px rgba(215,180,106,.25);
-  }
-  button.secondary{
-    background:#16161c;color:var(--text);border:1px solid var(--line);box-shadow:none;
-  }
-  button.ghost{
-    background:transparent;color:var(--text);border:1px dashed var(--line);box-shadow:none;
-  }
+  body{font-family:system-ui;padding:20px;max-width:900px;margin:auto;background:#0b0b0e;color:#f5f6fa}
+  h2{margin:0 0 10px}
+  .card{border:1px solid #1e1e25;border-radius:14px;padding:16px;margin:12px 0;background:#121216}
+  input,button{padding:12px 14px;width:100%;margin:6px 0;border-radius:12px;border:1px solid #1e1e25;background:#0f0f13;color:#f5f6fa}
+  input::placeholder{color:#888}
+  input:focus{outline:none;border-color:#D7B46A;box-shadow:0 0 0 3px rgba(215,180,106,.2)}
+  button{cursor:pointer;background:linear-gradient(180deg,#D7B46A,#B8934C);color:#0b0b0e;font-weight:800;border:none}
+  button.secondary{background:#16161c;color:#f5f6fa;border:1px solid #1e1e25}
+  button.ghost{background:transparent;border:1px dashed #2a2a34;color:#f5f6fa}
   button:disabled{opacity:.55;cursor:not-allowed}
-  button:hover:not(:disabled){transform:translateY(-1px)}
-
-  /* 레이아웃 */
   .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   @media (max-width:760px){ .row{grid-template-columns:1fr} }
-
-  /* 로그 */
-  #log{
-    background:#0e0e12;border:1px dashed var(--line);
-    border-radius:12px;padding:12px;min-height:60px;max-height:240px;overflow:auto;
-    font:12px ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:#d6d7de;
-  }
-
-  /* 알림 라벨 */
-  .hint{display:inline-flex;gap:8px;align-items:center;font-size:12px;color:var(--muted)}
-  .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:#0f0f13;color:#cfcfd8;font-size:12px}
+  small{opacity:.75}
+  .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid #1e1e25;background:#0f0f13;color:#cfcfd8;font-size:12px}
+  .kicker{font-size:13px;opacity:.8;margin-bottom:6px}
+  #log{background:#0e0e12;border:1px dashed #2a2a34;border-radius:12px;padding:12px;min-height:60px;max-height:260px;overflow:auto;font:12px ui-monospace,SFMono-Regular,Consolas,Menlo,monospace;color:#d6d7de}
+  .hl{color:#D7B46A}
+  .muted{opacity:.7}
+  .role-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+  .role-tabs label{display:inline-flex;gap:8px;align-items:center;border:1px solid #2a2a34;padding:8px 12px;border-radius:999px;background:#0f0f13;cursor:pointer}
+  .balances{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
+  @media (max-width:760px){ .balances{grid-template-columns:1fr 1fr} }
+  .kv{border:1px solid #1e1e25;border-radius:12px;background:#0f0f13;padding:12px}
+  .kv b{display:block;font-size:12px;opacity:.8}
+  .kv div{margin-top:4px;font-weight:700}
 </style>
 
-<div class="wrap">
-  <div class="header">
-    <div class="brand"><span class="dot"></span> Hwarang MVP</div>
-    <span class="badge">DEMO / LIVE</span>
-  </div>
+<h2>Hwarang MVP — <span class="hl">DEMO / LIVE</span></h2>
+<p class="muted">
+  고가 예술품 거래를 위한 에스크로 흐름을 <b>최소 기능</b>으로 시연합니다.<br/>
+  Demo=오프체인 시뮬(가상 잔액), Live=Kairos Testnet(실제 테스트 KAIA 이동). 실자산/실키 금지.
+</p>
 
-  <div class="card">
-    <h2>모드</h2>
-    <div class="sub">테스트넷 전용 · 실자산/실키 금지</div>
-    <label class="pill" style="margin-right:8px;">
-      <input id="demo" type="checkbox" checked style="accent-color:#d7b46a;margin-right:8px;scale:1.15;">
-      Demo 모드(지갑/주소 없이 시뮬레이션)
-    </label>
-    <div id="acct" class="hint" style="margin-top:8px;">Demo 모드: 연결 불필요</div>
-    <div class="row" style="margin-top:10px">
-      <button id="connectInjected" class="secondary" disabled>지갑 연결(브라우저 지갑)</button>
-      <button id="connectWC" class="secondary" disabled>지갑 연결(ABC 월렛 · WalletConnect)</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>설정</h2>
-    <input id="backend" placeholder="Demo API 주소 (예: https://art-escrow.onrender.com)" />
-    <input id="escrow" placeholder="(Live) ArtEscrowNative 주소" />
-    <div class="row">
-      <input id="price" type="text" value="1.0" placeholder="price in KAIA (예: 1.0)" />
-      <input id="chainId" type="text" value="1001" placeholder="체인ID (예: Kairos=1001, 다르면 수정)" />
-    </div>
-    <input id="wcProjectId" placeholder="WalletConnect Project ID (ABC월렛 연결 시)" />
-    <div class="row">
-      <button id="save">설정 저장</button>
-      <div id="status" class="pill">대기 중…</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>동작</h2>
-    <div class="row">
-      <button id="create" class="ghost">create (demo-api)</button>
-      <button id="fund">fund()</button>
-    </div>
-    <button id="confirm" class="secondary">confirm()</button>
-    <button id="runAll">Run All (fund→confirm)</button>
-    <div id="log" style="margin-top:10px"></div>
+<div class="card">
+  <div class="kicker">모드</div>
+  <label class="pill" style="margin-right:8px;">
+    <input id="demo" type="checkbox" checked style="accent-color:#d7b46a;margin-right:8px;scale:1.15;">
+    Demo 모드(지갑/주소 없이 시뮬레이션)
+  </label>
+  <div id="acct" class="pill" style="margin-top:8px;">Demo 모드: 연결 불필요</div>
+  <div class="row" style="margin-top:10px">
+    <button id="connectInjected" class="secondary" disabled>지갑 연결(브라우저 지갑)</button>
+    <button id="connectWC" class="secondary" disabled>지갑 연결(ABC 월렛 · WalletConnect)</button>
   </div>
 </div>
 
+<div class="card">
+  <div class="kicker">설정</div>
+  <input id="backend" placeholder="Demo API 주소 (예: https://art-escrow.onrender.com)" />
+  <input id="escrow" placeholder="(Live) ArtEscrowNative 주소" />
+  <div class="row">
+    <input id="price" type="text" value="1.0" placeholder="price in KAIA (예: 1.0)" />
+    <input id="chainId" type="text" value="1001" placeholder="체인ID (예: Kairos=1001, 다르면 수정)" />
+  </div>
+  <input id="wcProjectId" placeholder="WalletConnect Project ID (ABC월렛 연결 시)" />
+  <div class="row">
+    <button id="save">설정 저장</button>
+    <div id="status" class="pill">대기 중…</div>
+  </div>
+</div>
+
+<!-- DEMO 전용: 역할 전환 + 가상 잔액 -->
+<div class="card">
+  <div class="kicker">Demo 역할(Role) 전환</div>
+  <div class="role-tabs">
+    <label><input type="radio" name="role" value="buyer" checked> 구매자(buyerbuyerbuyerbuyer)</label>
+    <label><input type="radio" name="role" value="seller"> 판매자(sellersellersellerseller)</label>
+    <label><input type="radio" name="role" value="arbiter"> 중재자(arbiterarbiterarbiter)</label>
+  </div>
+  <div class="balances" id="demoBalances">
+    <div class="kv"><b>구매자</b><div id="demoBuyerBal">—</div></div>
+    <div class="kv"><b>판매자</b><div id="demoSellerBal">—</div></div>
+    <div class="kv"><b>중재자</b><div id="demoArbiterBal">—</div></div>
+    <div class="kv"><b>에스크로(가상)</b><div id="demoEscrowBal">—</div></div>
+  </div>
+  <small class="muted">* Demo는 가상 KAIA 잔액으로만 변화가 보이며, 블록체인 이동은 없습니다.</small>
+</div>
+
+<div class="card">
+  <div class="kicker">Live 잔액 (Kairos Testnet)</div>
+  <div class="balances">
+    <div class="kv"><b>컨트랙트 잔액</b><div id="liveEscrowBal">—</div></div>
+    <div class="kv"><b>구매자(내 지갑)</b><div id="liveBuyerBal">—</div></div>
+    <div class="kv"><b>판매자(컨트랙트 seller)</b><div id="liveSellerBal">—</div></div>
+    <div class="kv"><b>중재자(컨트랙트 arbiter)</b><div id="liveArbiterBal">—</div></div>
+  </div>
+  <small class="muted">* Live는 실제 테스트 KAIA 이동. Save/트랜잭션 후 자동 갱신됩니다.</small>
+</div>
+
+<div class="card">
+  <div class="kicker">동작</div>
+  <div class="row">
+    <button id="create" class="ghost">create (demo-api)</button>
+    <button id="fund">fund()</button>
+  </div>
+  <button id="confirm" class="secondary">confirm()</button>
+  <button id="runAll">Run All (fund→confirm)</button>
+  <div id="log" style="margin-top:10px"></div>
+  <small class="muted">
+    • Demo: 상태만 변경(CREATED → INSPECTION → CONFIRMED) · 가상 잔액 변동<br/>
+    • Live: fund() 시 컨트랙트로 KAIA 예치, confirm() 시 판매자에게 지급
+  </small>
+</div>
+
 <script>
-/* ===== 기존 기능 그대로 (코드 전혀 수정 안 함) ===== */
+/* ====== 기존 ABI + 읽기용 ABI(주소 조회) 추가 ====== */
 const escrowAbi = [
   "function price() view returns (uint256)",
   "function fund() payable",
   "function confirm()",
+  // (선택) 컨트랙트에 public 변수로 있을 때 잔액 조회용
+  "function buyer() view returns (address)",
+  "function seller() view returns (address)",
+  "function arbiter() view returns (address)"
 ];
 
 let demo = true, provider, signer, escrow, wcProvider, escrowId = null, currentChain = 1001n;
+let currentRole = "buyer"; // demo 전용
+
+// Demo 가상 잔액 (KAIA 단위)
+const demoState = {
+  buyer: 100.0,
+  seller: 0.0,
+  arbiter: 0.0,
+  escrow: 0.0
+};
 
 const el = id => document.getElementById(id);
 const log = m => el("log").innerHTML = `<small>${new Date().toLocaleTimeString()} — ${m}</small><br>` + el("log").innerHTML;
 const setStatus = m => el("status").innerText = m;
 
-// Demo/Live 토글
+/* ===== 공통: KAIA 포맷 ===== */
+const fmt = (v) => {
+  try { return (typeof v === "bigint" ? ethers.formatEther(v) : Number(v).toString()) + " KAIA"; }
+  catch { return String(v); }
+};
+
+/* ===== Demo 잔액 렌더링 ===== */
+function renderDemoBalances(){
+  el("demoBuyerBal").innerText = fmt(demoState.buyer);
+  el("demoSellerBal").innerText = fmt(demoState.seller);
+  el("demoArbiterBal").innerText = fmt(demoState.arbiter);
+  el("demoEscrowBal").innerText = fmt(demoState.escrow);
+}
+renderDemoBalances();
+
+/* ===== Live 잔액 갱신 ===== */
+async function refreshLiveBalances(){
+  // provider/escrow 없이 호출되면 skip
+  const addr = el("escrow").value.trim();
+  if (!provider || !addr) return;
+
+  try {
+    // 컨트랙트/지갑/판매자/중재자 주소
+    const contractAddr = addr;
+    const buyerAddr = signer ? await signer.getAddress() : null;
+
+    // 컨트랙트가 public 변수 제공하는 경우에만
+    let sellerAddr = null, arbiterAddr = null;
+    if (escrow) {
+      try { sellerAddr = await escrow.seller(); } catch {}
+      try { arbiterAddr = await escrow.arbiter(); } catch {}
+    }
+
+    const escBal = await provider.getBalance(contractAddr);
+    el("liveEscrowBal").innerText = fmt(escBal);
+
+    if (buyerAddr){
+      const b = await provider.getBalance(buyerAddr);
+      el("liveBuyerBal").innerText = fmt(b);
+    } else {
+      el("liveBuyerBal").innerText = "—";
+    }
+
+    if (sellerAddr){
+      const s = await provider.getBalance(sellerAddr);
+      el("liveSellerBal").innerText = fmt(s);
+    } else {
+      el("liveSellerBal").innerText = "—";
+    }
+
+    if (arbiterAddr){
+      const a = await provider.getBalance(arbiterAddr);
+      el("liveArbiterBal").innerText = fmt(a);
+    } else {
+      el("liveArbiterBal").innerText = "—";
+    }
+  } catch(e){
+    // 네트워크/권한 이슈 시 조용히 무시
+  }
+}
+
+/* ===== Demo/Live 토글 ===== */
 el("demo").onchange = () => {
   demo = el("demo").checked;
   const dis = demo ? true : false;
@@ -171,7 +209,15 @@ el("demo").onchange = () => {
   el("acct").innerHTML = demo ? "Demo 모드: 연결 불필요" : "Live 모드: 지갑 연결 필요";
 };
 
-// 브라우저 지갑(Kaikas/MetaMask)
+/* ===== Demo: 역할 전환 ===== */
+document.querySelectorAll('input[name="role"]').forEach(r => {
+  r.addEventListener('change', () => {
+    currentRole = r.value;
+    log(`(demo) 역할 전환: ${currentRole}`);
+  });
+});
+
+/* ===== 브라우저 지갑 연결 ===== */
 el("connectInjected").onclick = async () => {
   if (!window.ethereum) return alert("브라우저 지갑이 필요합니다 (Kaikas/MetaMask)");
   provider = new ethers.BrowserProvider(window.ethereum);
@@ -180,9 +226,10 @@ el("connectInjected").onclick = async () => {
   const net = await provider.getNetwork();
   currentChain = net.chainId;
   el("acct").innerHTML = `<b>${await signer.getAddress()}</b> (chainId=${net.chainId})`;
+  await refreshLiveBalances();
 };
 
-// ABC월렛(모바일) — WalletConnect
+/* ===== ABC월렛 — WalletConnect ===== */
 el("connectWC").onclick = async () => {
   const pid = el("wcProjectId").value.trim();
   const cid = Number(el("chainId").value || "1001");
@@ -196,9 +243,10 @@ el("connectWC").onclick = async () => {
   const net = await provider.getNetwork();
   currentChain = net.chainId;
   el("acct").innerHTML = `<b>${await signer.getAddress()}</b> (chainId=${net.chainId})`;
+  await refreshLiveBalances();
 };
 
-// 설정 저장
+/* ===== 설정 저장 ===== */
 el("save").onclick = async () => {
   const addr = el("escrow").value.trim();
   const priceStr = el("price").value || "1.0";
@@ -212,48 +260,72 @@ el("save").onclick = async () => {
     const onP = await escrow.price();
     setStatus(`Live 설정 완료. on-chain price=${ethers.formatEther(onP)} KAIA / 입력=${priceStr}`);
   } catch { setStatus("컨트랙트/네트워크 확인 필요"); }
+  await refreshLiveBalances();
 };
 
-// Demo API: 생성
+/* ===== Demo API: 생성 ===== */
 el("create").onclick = async () => {
   if (!demo) { log("(참고) Live 모드에서는 create 불필요"); return; }
   const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
   const priceStr = el("price").value || "1.0";
   const r = await fetch(be + "/api/escrow", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ price: priceStr }) });
   const j = await r.json(); escrowId = j.id; log(`(demo) created: id=${escrowId}, status=${j.status}`);
+  // Demo: create 시 잔액은 변화 없음 (계약 생성만)
+  renderDemoBalances();
 };
 
-// fund
+/* ===== fund ===== */
 el("fund").onclick = async () => {
   const priceStr = el("price").value || "1.0";
+
   if (demo) {
     if (!escrowId) return alert("먼저 create");
+    // 역할: 구매자만 fund 가능 (시각적 제한)
+    if (currentRole !== "buyer") return alert("Demo: 구매자 뷰에서만 fund 가능합니다.");
     const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
     await fetch(be + `/api/escrow/${escrowId}/fund`, { method:"POST" });
+    // 가상 잔액 이동: buyer -> escrow
+    const p = parseFloat(priceStr);
+    if (demoState.buyer >= p){
+      demoState.buyer -= p;
+      demoState.escrow += p;
+    }
+    renderDemoBalances();
     log(`(demo) fund -> status=INSPECTION`);
     return;
   }
+
   if (!escrow) return alert("설정 저장 후 실행");
   const val = ethers.parseEther(priceStr.toString());
   const tx = await escrow.fund({ value: val });
   log(`fund tx: ${tx.hash}`); await tx.wait(); log("fund mined");
+  await refreshLiveBalances();
 };
 
-// confirm
+/* ===== confirm ===== */
 el("confirm").onclick = async () => {
   if (demo) {
     if (!escrowId) return alert("먼저 create");
+    // 역할: 구매자만 confirm 가능 (시각적 제한)
+    if (currentRole !== "buyer") return alert("Demo: 구매자 뷰에서만 confirm 가능합니다.");
     const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
     await fetch(be + `/api/escrow/${escrowId}/confirm`, { method:"POST" });
+    // 가상 잔액 이동: escrow -> seller
+    const amt = demoState.escrow;
+    demoState.escrow = 0.0;
+    demoState.seller += amt;
+    renderDemoBalances();
     log(`(demo) confirm -> status=CONFIRMED`);
     return;
   }
+
   if (!escrow) return alert("설정 저장 후 실행");
   const tx = await escrow.confirm();
   log(`confirm tx: ${tx.hash}`); await tx.wait(); log("confirm mined");
+  await refreshLiveBalances();
 };
 
-// 원클릭 시퀀스
+/* ===== 원클릭 시퀀스 ===== */
 el("runAll").onclick = async () => {
   await el("fund").onclick(); await el("confirm").onclick();
 };
