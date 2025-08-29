@@ -8,7 +8,7 @@
 <script src="https://unpkg.com/@walletconnect/ethereum-provider@2.14.1/dist/index.umd.js"></script>
 
 <style>
-  body{font-family:system-ui;padding:20px;max-width:900px;margin:auto;background:#0b0b0e;color:#f5f6fa}
+  body{font-family:system-ui;padding:20px;max-width:1000px;margin:auto;background:#0b0b0e;color:#f5f6fa}
   h2{margin:0 0 10px}
   .card{border:1px solid #1e1e25;border-radius:14px;padding:16px;margin:12px 0;background:#121216}
   input,button{padding:12px 14px;width:100%;margin:6px 0;border-radius:12px;border:1px solid #1e1e25;background:#0f0f13;color:#f5f6fa}
@@ -19,7 +19,8 @@
   button.ghost{background:transparent;border:1px dashed #2a2a34;color:#f5f6fa}
   button:disabled{opacity:.55;cursor:not-allowed}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  @media (max-width:760px){ .row{grid-template-columns:1fr} }
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media (max-width:900px){ .row,.row3{grid-template-columns:1fr} }
   small{opacity:.75}
   .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid #1e1e25;background:#0f0f13;color:#cfcfd8;font-size:12px}
   .kicker{font-size:13px;opacity:.8;margin-bottom:6px}
@@ -29,10 +30,15 @@
   .role-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
   .role-tabs label{display:inline-flex;gap:8px;align-items:center;border:1px solid #2a2a34;padding:8px 12px;border-radius:999px;background:#0f0f13;cursor:pointer}
   .balances{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px}
-  @media (max-width:760px){ .balances{grid-template-columns:1fr 1fr} }
+  @media (max-width:900px){ .balances{grid-template-columns:1fr 1fr} }
   .kv{border:1px solid #1e1e25;border-radius:12px;background:#0f0f13;padding:12px}
   .kv b{display:block;font-size:12px;opacity:.8}
   .kv div{margin-top:4px;font-weight:700}
+  .grid-list{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media (max-width:900px){ .grid-list{grid-template-columns:1fr} }
+  .art-card{border:1px solid #1e1e25;border-radius:12px;background:#0f0f13;padding:12px}
+  .art-card img{width:100%;height:180px;object-fit:cover;border-radius:10px;border:1px solid #1e1e25;background:#0e0e12}
+  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style>
 
 <h2>Hwarang MVP — <span class="hl">DEMO / LIVE</span></h2>
@@ -41,6 +47,7 @@
   Demo=오프체인 시뮬(가상 잔액), Live=Kairos Testnet(실제 테스트 KAIA 이동). 실자산/실키 금지.
 </p>
 
+<!-- 모드/연결 -->
 <div class="card">
   <div class="kicker">모드</div>
   <label class="pill" style="margin-right:8px;">
@@ -54,6 +61,7 @@
   </div>
 </div>
 
+<!-- 설정 -->
 <div class="card">
   <div class="kicker">설정</div>
   <input id="backend" placeholder="Demo API 주소 (예: https://art-escrow.onrender.com)" />
@@ -69,7 +77,7 @@
   </div>
 </div>
 
-<!-- DEMO 전용: 역할 전환 + 가상 잔액 -->
+<!-- 역할/가상 잔액 -->
 <div class="card">
   <div class="kicker">Demo 역할(Role) 전환</div>
   <div class="role-tabs">
@@ -86,6 +94,7 @@
   <small class="muted">* Demo는 가상 KAIA 잔액으로만 변화가 보이며, 블록체인 이동은 없습니다.</small>
 </div>
 
+<!-- Live 잔액 -->
 <div class="card">
   <div class="kicker">Live 잔액 (Kairos Testnet)</div>
   <div class="balances">
@@ -97,55 +106,78 @@
   <small class="muted">* Live는 실제 테스트 KAIA 이동. Save/트랜잭션 후 자동 갱신됩니다.</small>
 </div>
 
+<!-- 마켓: 판매자 등록/조회/구매 -->
+<div class="card">
+  <div class="kicker">마켓(판매자 등록 → 구매자 조회/구매)</div>
+  <div class="row3">
+    <input id="artTitle" placeholder="작품 제목 (예: Untitled #1)">
+    <input id="artImage" placeholder="이미지 URL (선택)">
+    <input id="artPrice" type="text" value="1.0" placeholder="가격 KAIA (예: 1.0)">
+  </div>
+  <div class="row">
+    <button id="listArt">판매자: 작품 등록(가격의 10% 예치)</button>
+    <button id="loadMarket" class="secondary">마켓 불러오기</button>
+  </div>
+  <div id="market" class="grid-list"></div>
+</div>
+
+<!-- 동작(기존 + 판매자/구매자/중재자 추가) -->
 <div class="card">
   <div class="kicker">동작</div>
-  <div class="row">
+  <div class="flex">
+    <div class="pill">선택된 작품: <span id="chosenArt">없음</span></div>
+    <div class="pill">현재 Escrow: <span id="chosenEscrow">없음</span></div>
+  </div>
+  <div class="row" style="margin-top:8px">
     <button id="create" class="ghost">create (demo-api)</button>
     <button id="fund">fund()</button>
   </div>
   <button id="confirm" class="secondary">confirm()</button>
   <button id="runAll">Run All (fund→confirm)</button>
+
+  <div class="row" style="margin-top:10px">
+    <button id="sellerConfirm" class="secondary">판매자 확인(seller-confirm)</button>
+    <button id="sellerReject" class="ghost">판매자 거절(seller-reject)</button>
+  </div>
+  <div class="row">
+    <button id="buyerReject" class="ghost">구매자 거절(분쟁으로)</button>
+    <button id="arbBuyer" class="secondary">중재: 구매자 승</button>
+    <button id="arbSeller" class="secondary">중재: 판매자 승</button>
+  </div>
+
   <div id="log" style="margin-top:10px"></div>
   <small class="muted">
-    • Demo: 상태만 변경(CREATED → INSPECTION → CONFIRMED) · 가상 잔액 변동<br/>
+    • Demo: 상태머신 시뮬 + 가상 잔액(예치 10%)<br/>
     • Live: fund() 시 컨트랙트로 KAIA 예치, confirm() 시 판매자에게 지급
   </small>
 </div>
 
 <script>
-/* ====== 기존 ABI + 읽기용 ABI(주소 조회) 추가 ====== */
+/* ===== ABI ===== */
 const escrowAbi = [
   "function price() view returns (uint256)",
   "function fund() payable",
   "function confirm()",
-  // (선택) 컨트랙트에 public 변수로 있을 때 잔액 조회용
   "function buyer() view returns (address)",
   "function seller() view returns (address)",
   "function arbiter() view returns (address)"
 ];
 
 let demo = true, provider, signer, escrow, wcProvider, escrowId = null, currentChain = 1001n;
-let currentRole = "buyer"; // demo 전용
+let currentRole = "buyer";
+let selectedArtId = null;
 
-// Demo 가상 잔액 (KAIA 단위)
-const demoState = {
-  buyer: 100.0,
-  seller: 0.0,
-  arbiter: 0.0,
-  escrow: 0.0
-};
+// Demo 가상 잔액
+const demoState = { buyer: 100.0, seller: 0.0, arbiter: 0.0, escrow: 0.0 };
+// 예치 추적(10%)
+let buyerDeposit = 0.0;
+let sellerDeposit = 0.0;
 
 const el = id => document.getElementById(id);
 const log = m => el("log").innerHTML = `<small>${new Date().toLocaleTimeString()} — ${m}</small><br>` + el("log").innerHTML;
 const setStatus = m => el("status").innerText = m;
+const fmt = v => { try { return (typeof v==="bigint"?ethers.formatEther(v):Number(v).toFixed(4))+" KAIA"; } catch { return String(v);} };
 
-/* ===== 공통: KAIA 포맷 ===== */
-const fmt = (v) => {
-  try { return (typeof v === "bigint" ? ethers.formatEther(v) : Number(v).toString()) + " KAIA"; }
-  catch { return String(v); }
-};
-
-/* ===== Demo 잔액 렌더링 ===== */
 function renderDemoBalances(){
   el("demoBuyerBal").innerText = fmt(demoState.buyer);
   el("demoSellerBal").innerText = fmt(demoState.seller);
@@ -154,53 +186,23 @@ function renderDemoBalances(){
 }
 renderDemoBalances();
 
-/* ===== Live 잔액 갱신 ===== */
+/* ===== Live 잔액 ===== */
 async function refreshLiveBalances(){
-  // provider/escrow 없이 호출되면 skip
   const addr = el("escrow").value.trim();
   if (!provider || !addr) return;
-
-  try {
-    // 컨트랙트/지갑/판매자/중재자 주소
+  try{
     const contractAddr = addr;
     const buyerAddr = signer ? await signer.getAddress() : null;
-
-    // 컨트랙트가 public 변수 제공하는 경우에만
-    let sellerAddr = null, arbiterAddr = null;
-    if (escrow) {
-      try { sellerAddr = await escrow.seller(); } catch {}
-      try { arbiterAddr = await escrow.arbiter(); } catch {}
-    }
-
-    const escBal = await provider.getBalance(contractAddr);
-    el("liveEscrowBal").innerText = fmt(escBal);
-
-    if (buyerAddr){
-      const b = await provider.getBalance(buyerAddr);
-      el("liveBuyerBal").innerText = fmt(b);
-    } else {
-      el("liveBuyerBal").innerText = "—";
-    }
-
-    if (sellerAddr){
-      const s = await provider.getBalance(sellerAddr);
-      el("liveSellerBal").innerText = fmt(s);
-    } else {
-      el("liveSellerBal").innerText = "—";
-    }
-
-    if (arbiterAddr){
-      const a = await provider.getBalance(arbiterAddr);
-      el("liveArbiterBal").innerText = fmt(a);
-    } else {
-      el("liveArbiterBal").innerText = "—";
-    }
-  } catch(e){
-    // 네트워크/권한 이슈 시 조용히 무시
-  }
+    let sellerAddr=null, arbiterAddr=null;
+    if(escrow){ try{sellerAddr=await escrow.seller();}catch{} try{arbiterAddr=await escrow.arbiter();}catch{} }
+    const escBal = await provider.getBalance(contractAddr); el("liveEscrowBal").innerText = fmt(escBal);
+    if (buyerAddr){ const b=await provider.getBalance(buyerAddr); el("liveBuyerBal").innerText=fmt(b);} else { el("liveBuyerBal").innerText="—"; }
+    if (sellerAddr){ const s=await provider.getBalance(sellerAddr); el("liveSellerBal").innerText=fmt(s);} else { el("liveSellerBal").innerText="—"; }
+    if (arbiterAddr){ const a=await provider.getBalance(arbiterAddr); el("liveArbiterBal").innerText=fmt(a);} else { el("liveArbiterBal").innerText="—"; }
+  }catch{}
 }
 
-/* ===== Demo/Live 토글 ===== */
+/* ===== 모드 ===== */
 el("demo").onchange = () => {
   demo = el("demo").checked;
   const dis = demo ? true : false;
@@ -209,15 +211,12 @@ el("demo").onchange = () => {
   el("acct").innerHTML = demo ? "Demo 모드: 연결 불필요" : "Live 모드: 지갑 연결 필요";
 };
 
-/* ===== Demo: 역할 전환 ===== */
+/* ===== 역할 ===== */
 document.querySelectorAll('input[name="role"]').forEach(r => {
-  r.addEventListener('change', () => {
-    currentRole = r.value;
-    log(`(demo) 역할 전환: ${currentRole}`);
-  });
+  r.addEventListener('change', () => { currentRole = r.value; log(`(demo) 역할 전환: ${currentRole}`); });
 });
 
-/* ===== 브라우저 지갑 연결 ===== */
+/* ===== 연결 ===== */
 el("connectInjected").onclick = async () => {
   if (!window.ethereum) return alert("브라우저 지갑이 필요합니다 (Kaikas/MetaMask)");
   provider = new ethers.BrowserProvider(window.ethereum);
@@ -228,15 +227,11 @@ el("connectInjected").onclick = async () => {
   el("acct").innerHTML = `<b>${await signer.getAddress()}</b> (chainId=${net.chainId})`;
   await refreshLiveBalances();
 };
-
-/* ===== ABC월렛 — WalletConnect ===== */
 el("connectWC").onclick = async () => {
   const pid = el("wcProjectId").value.trim();
   const cid = Number(el("chainId").value || "1001");
   if (!pid) return alert("WalletConnect Project ID를 입력하세요.");
-  wcProvider = await window.WalletConnectProvider.EthereumProvider.init({
-    projectId: pid, chains: [cid], optionalChains: [cid], showQrModal: true
-  });
+  wcProvider = await window.WalletConnectProvider.EthereumProvider.init({ projectId: pid, chains:[cid], optionalChains:[cid], showQrModal:true });
   await wcProvider.connect();
   provider = new ethers.BrowserProvider(wcProvider);
   signer = await provider.getSigner();
@@ -263,70 +258,208 @@ el("save").onclick = async () => {
   await refreshLiveBalances();
 };
 
-/* ===== Demo API: 생성 ===== */
+/* ===== 기존 Demo API: 간이 create/fund/confirm (남겨둠) ===== */
 el("create").onclick = async () => {
   if (!demo) { log("(참고) Live 모드에서는 create 불필요"); return; }
   const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
   const priceStr = el("price").value || "1.0";
   const r = await fetch(be + "/api/escrow", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ price: priceStr }) });
-  const j = await r.json(); escrowId = j.id; log(`(demo) created: id=${escrowId}, status=${j.status}`);
-  // Demo: create 시 잔액은 변화 없음 (계약 생성만)
+  const j = await r.json(); escrowId = j.id; el("chosenEscrow").innerText = escrowId; log(`(demo) created: id=${escrowId}, status=${j.status}`);
   renderDemoBalances();
 };
-
-/* ===== fund ===== */
 el("fund").onclick = async () => {
   const priceStr = el("price").value || "1.0";
-
   if (demo) {
     if (!escrowId) return alert("먼저 create");
-    // 역할: 구매자만 fund 가능 (시각적 제한)
     if (currentRole !== "buyer") return alert("Demo: 구매자 뷰에서만 fund 가능합니다.");
     const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
     await fetch(be + `/api/escrow/${escrowId}/fund`, { method:"POST" });
-    // 가상 잔액 이동: buyer -> escrow
     const p = parseFloat(priceStr);
-    if (demoState.buyer >= p){
-      demoState.buyer -= p;
-      demoState.escrow += p;
-    }
-    renderDemoBalances();
-    log(`(demo) fund -> status=INSPECTION`);
-    return;
+    if (demoState.buyer >= p){ demoState.buyer -= p; demoState.escrow += p; }
+    renderDemoBalances(); log(`(demo) fund -> status=INSPECTION`); return;
   }
-
   if (!escrow) return alert("설정 저장 후 실행");
   const val = ethers.parseEther(priceStr.toString());
   const tx = await escrow.fund({ value: val });
-  log(`fund tx: ${tx.hash}`); await tx.wait(); log("fund mined");
-  await refreshLiveBalances();
+  log(`fund tx: ${tx.hash}`); await tx.wait(); log("fund mined"); await refreshLiveBalances();
 };
-
-/* ===== confirm ===== */
 el("confirm").onclick = async () => {
   if (demo) {
     if (!escrowId) return alert("먼저 create");
-    // 역할: 구매자만 confirm 가능 (시각적 제한)
     if (currentRole !== "buyer") return alert("Demo: 구매자 뷰에서만 confirm 가능합니다.");
     const be = el("backend").value.trim(); if (!be) return alert("Demo API 주소 입력");
     await fetch(be + `/api/escrow/${escrowId}/confirm`, { method:"POST" });
-    // 가상 잔액 이동: escrow -> seller
-    const amt = demoState.escrow;
-    demoState.escrow = 0.0;
-    demoState.seller += amt;
-    renderDemoBalances();
-    log(`(demo) confirm -> status=CONFIRMED`);
-    return;
+    const amt = demoState.escrow; demoState.escrow = 0.0; demoState.seller += amt; renderDemoBalances();
+    log(`(demo) confirm -> status=CONFIRMED`); return;
   }
-
   if (!escrow) return alert("설정 저장 후 실행");
   const tx = await escrow.confirm();
-  log(`confirm tx: ${tx.hash}`); await tx.wait(); log("confirm mined");
-  await refreshLiveBalances();
+  log(`confirm tx: ${tx.hash}`); await tx.wait(); log("confirm mined"); await refreshLiveBalances();
+};
+el("runAll").onclick = async () => { await el("fund").onclick(); await el("confirm").onclick(); };
+
+/* ====== 신규: 마켓(판매자 등록/조회/구매) ====== */
+const beUrl = () => (el("backend").value || "").trim();
+
+el("listArt").onclick = async () => {
+  if (!demo) return alert("Demo에서만 사용(시연용)");
+  if (currentRole !== "seller") return alert("판매자 역할에서 진행해주세요.");
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const title = el("artTitle").value.trim() || "Untitled";
+  const image = el("artImage").value.trim();
+  const price = parseFloat(el("artPrice").value || "1.0");
+  const r = await fetch(be + "/api/art", {
+    method:"POST", headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ title, image, price, seller:"sellersellersellerseller" })
+  });
+  if (!r.ok) return alert("등록 실패");
+  const art = await r.json();
+  // 가상 예치: 판매자 → 에스크로 10%
+  const ten = +(price*0.10).toFixed(6);
+  if (demoState.seller >= ten){ demoState.seller -= ten; demoState.escrow += ten; sellerDeposit = ten; }
+  renderDemoBalances();
+  log(`(demo) LISTED art=${art.id} title="${title}" price=${price} (seller deposit 10%=${ten})`);
+  await loadMarket();
 };
 
-/* ===== 원클릭 시퀀스 ===== */
-el("runAll").onclick = async () => {
-  await el("fund").onclick(); await el("confirm").onclick();
+async function loadMarket(){
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const r = await fetch(be + "/api/art");
+  if (!r.ok) return alert("마켓 조회 실패");
+  const list = await r.json();
+  const box = el("market"); box.innerHTML = "";
+  list.forEach(a => {
+    const div = document.createElement("div");
+    div.className = "art-card";
+    div.innerHTML = `
+      ${a.image ? `<img src="${a.image}" alt="">` : `<div style="height:180px;border:1px dashed #2a2a34;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#9aa">No Image</div>`}
+      <div style="margin-top:8px;font-weight:800">${a.title}</div>
+      <div class="muted">가격: ${a.price} KAIA · 판매자: ${a.seller.slice(0,8)}…</div>
+      <div class="flex" style="margin-top:8px">
+        <button data-id="${a.id}" class="secondary buyBtn">이 작품 구매(create)</button>
+        <span class="pill">상태: ${a.status}</span>
+      </div>
+    `;
+    box.appendChild(div);
+  });
+  // buy 버튼 바인딩
+  box.querySelectorAll(".buyBtn").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      if (currentRole !== "buyer") return alert("구매자 역할에서 진행해주세요.");
+      const artId = btn.getAttribute("data-id"); selectedArtId = artId; el("chosenArt").innerText = artId;
+      const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+      const r = await fetch(be + `/api/art/${artId}/buy`, {
+        method:"POST", headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ buyer:"buyerbuyerbuyerbuyer" })
+      });
+      if (!r.ok) return alert("구매 제안 실패");
+      const esc = await r.json(); escrowId = esc.id; el("chosenEscrow").innerText = escrowId;
+      log(`(demo) CREATED escrow=${escrowId} for art=${artId}`);
+    });
+  });
+}
+el("loadMarket").onclick = loadMarket;
+
+/* ====== 신규: 판매자/구매자/중재자 액션 ====== */
+// 판매자 확인 → INITIATED → PENDING(30s) ; 구매자 10% 예치 요구(가상: buyer→escrow)
+el("sellerConfirm").onclick = async () => {
+  if (!demo) return alert("Demo에서만 사용");
+  if (currentRole !== "seller") return alert("판매자 역할에서 진행");
+  if (!escrowId) return alert("먼저 작품을 선택·구매요청(create)하세요");
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const r = await fetch(be + `/api/escrow/${escrowId}/seller-confirm`, { method:"POST" });
+  const j = await r.json(); log(`(demo) seller-confirm → ${j.status} (PENDING 30s)`);
+  // 가상: 구매자 10% 예치
+  const price = parseFloat(j.price); const ten = +(price*0.10).toFixed(6);
+  if (demoState.buyer >= ten){ demoState.buyer -= ten; demoState.escrow += ten; buyerDeposit = ten; }
+  renderDemoBalances();
+  pollPending();
 };
+
+// 판매자 거절 → REJECTED (돈 이동 없음)
+el("sellerReject").onclick = async () => {
+  if (!demo) return alert("Demo에서만 사용");
+  if (currentRole !== "seller") return alert("판매자 역할에서 진행");
+  if (!escrowId) return alert("먼저 작품을 선택·구매요청(create)하세요");
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const r = await fetch(be + `/api/escrow/${escrowId}/seller-reject`, { method:"POST" });
+  const j = await r.json(); log(`(demo) seller-reject → ${j.status} (계약 취소)`);
+};
+
+// 구매자 거절 → DISPUTED
+el("buyerReject").onclick = async () => {
+  if (!demo) return alert("Demo에서만 사용");
+  if (currentRole !== "buyer") return alert("구매자 역할에서 진행");
+  if (!escrowId) return alert("먼저 seller-confirm로 PENDING 상태가 되어야 합니다.");
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const r = await fetch(be + `/api/escrow/${escrowId}/buyer-reject`, { method:"POST" });
+  const j = await r.json(); log(`(demo) buyer-reject → ${j.status} (중재로)`);
+};
+
+// 중재: 구매자 승 → 본대금 환불(시뮬), 중재자 10%는 "판매자 예치금"에서
+el("arbBuyer").onclick = async () => {
+  if (!demo) return alert("Demo에서만 사용");
+  if (currentRole !== "arbiter") return alert("중재자 역할에서 진행");
+  if (!escrowId) return alert("분쟁 상태에서 진행하세요");
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const r = await fetch(be + `/api/escrow/${escrowId}/arbitrate`, {
+    method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ winner:"buyer" })
+  });
+  const j = await r.json(); log(`(demo) arbitrate buyer → ${j.status} (fee 10% from sellerDeposit)`);
+  // 가상 정산
+  const P = parseFloat(j.price);
+  // 본대금 P 환불
+  if (demoState.escrow >= P){ demoState.escrow -= P; demoState.buyer += P; }
+  // 판매자 예치금 10% → 중재자
+  demoState.arbiter += sellerDeposit;
+  demoState.escrow = Math.max(0, demoState.escrow - sellerDeposit); // 에스크로 잔여에서 차감
+  sellerDeposit = 0; buyerDeposit = 0;
+  renderDemoBalances();
+};
+
+// 중재: 판매자 승 → 본대금 판매자에게, 중재자 10%는 "구매자 예치금"에서
+el("arbSeller").onclick = async () => {
+  if (!demo) return alert("Demo에서만 사용");
+  if (currentRole !== "arbiter") return alert("중재자 역할에서 진행");
+  if (!escrowId) return alert("분쟁 상태에서 진행하세요");
+  const be = beUrl(); if (!be) return alert("Demo API 주소 입력");
+  const r = await fetch(be + `/api/escrow/${escrowId}/arbitrate`, {
+    method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ winner:"seller" })
+  });
+  const j = await r.json(); log(`(demo) arbitrate seller → ${j.status} (fee 10% from buyerDeposit)`);
+  // 가상 정산
+  const P = parseFloat(j.price);
+  // 본대금 P 판매자 지급
+  if (demoState.escrow >= P){ demoState.escrow -= P; demoState.seller += P; }
+  // 구매자 예치금 10% → 중재자
+  demoState.arbiter += buyerDeposit;
+  demoState.escrow = Math.max(0, demoState.escrow - buyerDeposit);
+  buyerDeposit = 0; sellerDeposit = 0;
+  renderDemoBalances();
+};
+
+/* ===== PENDING 폴링(30초 자동확정 감지) ===== */
+async function pollPending(){
+  const id = escrowId; if(!id) return;
+  const be = beUrl(); if(!be) return;
+  const iv = setInterval(async ()=>{
+    const r = await fetch(be+`/api/escrow/${id}`);
+    if(!r.ok){ clearInterval(iv); return; }
+    const j = await r.json();
+    if (j.status === "CONFIRMED"){
+      clearInterval(iv);
+      log(`(demo) auto-confirmed → CONFIRMED`);
+      // 자동확정: 본대금 P 판매자, 예치금은 각자 반환
+      const P = parseFloat(j.price);
+      if (demoState.escrow >= P){ demoState.escrow -= P; demoState.seller += P; }
+      // 예치 반환
+      demoState.escrow = Math.max(0, demoState.escrow - buyerDeposit);
+      demoState.buyer += buyerDeposit; buyerDeposit = 0;
+      demoState.escrow = Math.max(0, demoState.escrow - sellerDeposit);
+      demoState.seller += sellerDeposit; sellerDeposit = 0;
+      renderDemoBalances();
+    }
+    if (j.status !== "PENDING"){ clearInterval(iv); }
+  }, 1200);
+}
 </script>
